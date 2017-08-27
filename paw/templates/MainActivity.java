@@ -6,7 +6,7 @@ import android.view.KeyEvent;
 import android.view.Window;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.WebSettings.LayoutAlgorithm;
+
 
 public class MainActivity extends Activity {
     private WebView mWebView;
@@ -16,12 +16,11 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         mWebView = new WebView(this);
-        mWebView.setInitialScale(0);
-        mWebView.setVerticalScrollBarEnabled(false);
-        mWebView.getSettings().setJavaScriptEnabled(true);
-       	mWebView.getSettings().setLoadWithOverviewMode(true);
+        mWebView.setInitialScale(1);
+        mWebView.getSettings().setLoadWithOverviewMode(true);
         mWebView.getSettings().setUseWideViewPort(true);
-        mWebView.getSettings().setLayoutAlgorithm(LayoutAlgorithm.NORMAL);
+        mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.setVerticalScrollBarEnabled(false);
         mWebView.loadUrl("file:///android_asset/www/index.html");
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
