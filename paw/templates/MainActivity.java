@@ -17,8 +17,8 @@ public class MainActivity extends Activity {
         getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         mWebView = new WebView(this);
         mWebView.setInitialScale(1);
-        mWebView.getSettings().setLoadWithOverviewMode(true);
         mWebView.getSettings().setUseWideViewPort(true);
+        mWebView.getSettings().setLoadWithOverviewMode(true);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.setVerticalScrollBarEnabled(false);
         mWebView.loadUrl("file:///android_asset/www/index.html");
