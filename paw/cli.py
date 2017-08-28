@@ -28,6 +28,13 @@ def generate(output: str, package: str, copy_from: str=''):
     copyTemplates(templatesPath, output, package)
     if copy_from:
         _copy_project(copy_from, output + '/')
+    copy_icons(output)
+
+
+def copy_icons(output):
+    sizes = ['mipmap-hdpi', 'mipmap-mdpi', 'mipmap-xhdpi', 'mipmap-xxhdpi', 'mipmap-xxxhdpi']
+    for size in sizes:
+        _create_path(os.path.join(output, 'src', 'main', 'res', size))
 
 
 @cli.command()
@@ -51,6 +58,7 @@ def _render(source, destination, data):
 
 def _copy_project(source, output):
     destination = os.path.join(output, 'src', 'main', 'assets', 'www')
+    _create_path(destination)
     rmtree(destination)
     copytree(source, destination)
 
