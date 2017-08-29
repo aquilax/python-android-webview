@@ -17,29 +17,30 @@ def cli(debug):
 @cli.command()
 @click.argument('output', type=click.Path(exists=False))
 @click.argument('package')
+@click.argument('name')
 @click.option('--copy-from')
-def generate(output: str, package: str, copy_from: str=''):
+def generate(output: str, package: str, name: str, copy_from: str=''):
     """Generates new template"""
     click.echo(click.format_filename(output))
     if not os.path.exists(output):
         os.makedirs(output)
     basePath = os.path.dirname(os.path.realpath(__file__))
     templatesPath = os.path.join(basePath, 'templates')
-    copyTemplates(templatesPath, output, package)
+    copyTemplates(templatesPath, output, package, name)
     if copy_from:
         _copy_project(copy_from, output + '/')
     copy_icons(output)
+
+
+@cli.command()
+def build():
+    """Builds the android application"""
 
 
 def copy_icons(output):
     sizes = ['mipmap-hdpi', 'mipmap-mdpi', 'mipmap-xhdpi', 'mipmap-xxhdpi', 'mipmap-xxxhdpi']
     for size in sizes:
         _create_path(os.path.join(output, 'src', 'main', 'res', size))
-
-
-@cli.command()
-def build():
-    """Builds the android application"""
 
 
 def _create_path(path: str):
@@ -86,9 +87,9 @@ def _copyActivity(templates, output, data):
     return _render(os.path.join(templates, ACTIVITY_NAME), output, data)
 
 
-def copyTemplates(templates: str, output: str, package: str):
+def copyTemplates(templates: str, output: str, package: str, name: str):
     data = {
-        'application_name': 'Test application',
+        'application_name': name,
         'package_name': package
     }
     _copyBuildScript(templates, output, data)
