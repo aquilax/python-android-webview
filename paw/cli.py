@@ -1,11 +1,13 @@
 import os
 import click
+import configparser
 from shutil import copytree, rmtree
 from string import Template
 
 BUILD_SCRIPT_NAME = 'build.gradle'
 MANIFEST_NAME = 'AndroidManifest.xml'
 ACTIVITY_NAME = 'MainActivity.java'
+LAUNCHER_ICON_NAME = 'ic_launcher.png'
 
 
 @click.group()
@@ -15,21 +17,20 @@ def cli(debug):
 
 
 @cli.command()
+@click.argument('config')
 @click.argument('output', type=click.Path(exists=False))
-@click.argument('package')
-@click.argument('name')
-@click.option('--copy-from')
-def generate(output: str, package: str, name: str, copy_from: str=''):
+def generate(config: str, output: str):
+    config = _load_config(config)
     """Generates new template"""
     click.echo(click.format_filename(output))
     if not os.path.exists(output):
         os.makedirs(output)
     basePath = os.path.dirname(os.path.realpath(__file__))
     templatesPath = os.path.join(basePath, 'templates')
-    copyTemplates(templatesPath, output, package, name)
-    if copy_from:
-        _copy_project(copy_from, output + '/')
-    copy_icons(output)
+    copyTemplates(templatesPath, output, config)
+    if config['copy_from']:
+        _copy_project(config['copy_from'], output + '/')
+    copy_icons(output, config)
 
 
 @cli.command()
@@ -37,10 +38,49 @@ def build():
     """Builds the android application"""
 
 
-def copy_icons(output):
-    sizes = ['mipmap-hdpi', 'mipmap-mdpi', 'mipmap-xhdpi', 'mipmap-xxhdpi', 'mipmap-xxxhdpi']
+def _load_config(config_file: str):
+    base = os.path.dirname(config_file)
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    app = config['App']
+    return {
+        'package_name': app['package_name'],
+        'application_name': app['application_name'],
+        'copy_from': os.path.join(base, app['copy_from']),
+        'svg_icon': os.path.join(base, app['svg_icon']),
+        'version_code': app['version_code'],
+        'version_name': app['version_name'],
+    }
+
+
+def create_icon(path, svg_icon, size):
+    cmd = 'inkscape {svg_icon} -w {width} -h {height} --export-png={icon}'.format(
+        svg_icon=svg_icon, width=size, height=size, icon=os.path.join(path, LAUNCHER_ICON_NAME))
+    os.system(cmd)
+
+
+def copy_icons(output: str, config: dict):
+    sizes = [{
+        'name': 'mipmap-mdpi',
+        'd': 48,
+    }, {
+        'name': 'mipmap-hdpi',
+        'd': 72,
+    }, {
+        'name': 'mipmap-xhdpi',
+        'd': 96,
+    }, {
+        'name': 'mipmap-xxhdpi',
+        'd': 144,
+    }, {
+        'name': 'mipmap-xxxhdpi',
+        'd': 192,
+    }]
     for size in sizes:
-        _create_path(os.path.join(output, 'src', 'main', 'res', size))
+        path = os.path.join(output, 'src', 'main', 'res', size['name'])
+        _create_path(path)
+        if config['svg_icon']:
+            create_icon(path, config['svg_icon'], size['d'])
 
 
 def _create_path(path: str):
@@ -87,14 +127,10 @@ def _copyActivity(templates, output, data):
     return _render(os.path.join(templates, ACTIVITY_NAME), output, data)
 
 
-def copyTemplates(templates: str, output: str, package: str, name: str):
-    data = {
-        'application_name': name,
-        'package_name': package
-    }
-    _copyBuildScript(templates, output, data)
-    _copyManifest(templates, output, data)
-    _copyActivity(templates, _get_activity_path(output, package), data)
+def copyTemplates(templates: str, output: str, config):
+    _copyBuildScript(templates, output, config)
+    _copyManifest(templates, output, config)
+    _copyActivity(templates, _get_activity_path(output, config['package_name']), config)
 
 
 if __name__ == '__main__':
